@@ -1,11 +1,8 @@
-ROM node:24-alpine
+FROM node:24-alpine
 
-ENV MONGODB_URI="mongodb://genshin:columbinasandrone@genshin-db:27017/genshin-leaks?authSource=admin"
 ENV NODE_ENV=production
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 RUN corepack enable && \
     apk add --no-cache \
