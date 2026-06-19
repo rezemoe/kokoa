@@ -1,5 +1,5 @@
 import { db } from '../../utils/db';
-import { posts, postTags } from '../../database/schema';
+import { posts, postTags, postEmoticonRules } from '../../database/schema';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -10,14 +10,14 @@ export default defineEventHandler(async (event) => {
   if (!slug) throw createError({ statusCode: 400, statusMessage: 'Missing slug' });
 
   const body = await readBody(event);
-  const { title, content, tags } = body;
+  const { title, content, tags, reactionMode, emoticonRules } = body;
   
   if (!title || !content) {
     throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
   }
 
   const updatedPost = await db.update(posts)
-    .set({ title, content })
+    .set({ title, content, reactionMode: reactionMode || 'all' })
     .where(eq(posts.slug, slug))
     .returning();
 
@@ -34,6 +34,17 @@ export default defineEventHandler(async (event) => {
       tagId
     }));
     await db.insert(postTags).values(postTagValues);
+  }
+
+  // Update emoticon rules
+  await db.delete(postEmoticonRules).where(eq(postEmoticonRules.postId, updatedPost[0].id));
+
+  if (emoticonRules && Array.isArray(emoticonRules) && emoticonRules.length > 0) {
+    const ruleValues = emoticonRules.map((emoticonId: string) => ({
+      postId: updatedPost[0].id,
+      emoticonId
+    }));
+    await db.insert(postEmoticonRules).values(ruleValues);
   }
 
   return updatedPost[0];

@@ -34,9 +34,9 @@
       </KokoaCard>
 
       <div style="margin-top: 4px; padding-top: 10px;">
-        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;" v-if="post.reactionMode !== 'none'">
           <button 
-            v-for="emoticon in emoticons" 
+            v-for="emoticon in filteredEmoticons" 
             :key="emoticon.id"
             @click="reactToPost(emoticon.id)"
             class="kokoa-btn"
@@ -88,9 +88,25 @@ const route = useRoute();
 const slug = route.params.slug;
 
 const { data: post, error, refresh } = await useFetch(`/api/posts/${slug}`);
-const { data: emoticons } = await useFetch('/api/emoticons');
+const { data: emoticons } = await useFetch('/api/emoticons?limit=-1');
 
 useHead({ title: () => post.value?.title || slug });
+
+const filteredEmoticons = computed(() => {
+  if (!emoticons.value || !post.value) return [];
+  const mode = post.value.reactionMode;
+  if (mode === 'none') return [];
+  if (mode === 'all') return emoticons.value;
+  
+  const rules = post.value.emoticonRules || [];
+  if (mode === 'whitelist') {
+    return emoticons.value.filter(e => rules.includes(e.id));
+  }
+  if (mode === 'blacklist') {
+    return emoticons.value.filter(e => !rules.includes(e.id));
+  }
+  return emoticons.value;
+});
 
 onMounted(() => {
   if (post.value) {

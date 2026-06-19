@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useVirtualList } from '@vueuse/core'
 
 export interface TagOption {
   id: string
@@ -41,6 +42,14 @@ const filteredOptions = computed(() => {
 })
 
 const isMaxReached = computed(() => props.maxTags > 0 && props.modelValue.length >= props.maxTags)
+
+const { list, containerProps, wrapperProps } = useVirtualList(
+  filteredOptions,
+  {
+    itemHeight: 32,
+    overscan: 10
+  }
+)
 
 function getOption(id: string) {
   return props.options.find(o => o.id === id)
@@ -156,32 +165,35 @@ function onKeydown(e: KeyboardEvent) {
       />
     </div>
 
-    <div v-if="isOpen" class="kokoa-tag-select__dropdown">
-      <button
-        v-for="(opt, idx) in filteredOptions"
-        :key="opt.id"
-        type="button"
-        class="kokoa-tag-select__option"
-        :class="{
-          'kokoa-tag-select__option--focused': idx === focusedIndex,
-          'kokoa-tag-select__option--selected': selectedSet.has(opt.id),
-          'kokoa-tag-select__option--disabled': opt.disabled,
-        }"
+    <div v-if="isOpen" class="kokoa-tag-select__dropdown" v-bind="containerProps" style="max-height: 200px; overflow-y: auto;">
+      <div v-bind="wrapperProps">
+        <button
+          v-for="{ data: opt, index: idx } in list"
+          :key="opt.id"
+          type="button"
+          class="kokoa-tag-select__option"
+          :class="{
+            'kokoa-tag-select__option--focused': idx === focusedIndex,
+            'kokoa-tag-select__option--selected': selectedSet.has(opt.id),
+            'kokoa-tag-select__option--disabled': opt.disabled,
+          }"
         @mousedown.prevent
         @click="selectTag(opt)"
         @mouseenter="focusedIndex = idx"
       >
-        <img
-          v-if="opt.image"
-          :src="opt.image"
-          :alt="opt.label"
-          class="kokoa-tag-select__option-img"
-        />
-        <span class="kokoa-tag-select__option-text">
-          <span class="kokoa-tag-select__option-label">{{ opt.label }}</span>
-          <span v-if="opt.description" class="kokoa-tag-select__option-desc">{{ opt.description }}</span>
-        </span>
-      </button>
+
+          <img
+            v-if="opt.image"
+            :src="opt.image"
+            :alt="opt.label"
+            class="kokoa-tag-select__option-img"
+          />
+          <span class="kokoa-tag-select__option-text">
+            <span class="kokoa-tag-select__option-label">{{ opt.label }}</span>
+            <span v-if="opt.description" class="kokoa-tag-select__option-desc">{{ opt.description }}</span>
+          </span>
+        </button>
+      </div>
       <div v-if="filteredOptions.length === 0" class="kokoa-tag-select__empty">
         No matches ε(´∀｀)з
       </div>

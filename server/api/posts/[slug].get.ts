@@ -1,5 +1,5 @@
 import { db } from '../../utils/db';
-import { posts, reactions, emoticons, users, tags, postTags } from '../../database/schema';
+import { posts, reactions, emoticons, users, tags, postTags, postEmoticonRules } from '../../database/schema';
 import { eq, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
     content: posts.content,
     viewsCount: posts.viewsCount,
     authorId: posts.authorId,
+    reactionMode: posts.reactionMode,
     createdAt: posts.createdAt,
     authorName: users.username,
   })
@@ -43,9 +44,16 @@ export default defineEventHandler(async (event) => {
   .innerJoin(tags, eq(postTags.tagId, tags.id))
   .where(eq(postTags.postId, post.id));
 
+  const rulesData = await db.select({
+    emoticonId: postEmoticonRules.emoticonId
+  })
+  .from(postEmoticonRules)
+  .where(eq(postEmoticonRules.postId, post.id));
+
   return {
     ...post,
     reactions: postReactions,
-    tags: postTagsData
+    tags: postTagsData,
+    emoticonRules: rulesData.map(r => r.emoticonId)
   };
 });

@@ -43,10 +43,18 @@ export default defineNitroPlugin(async (nitroApp) => {
       tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
       UNIQUE(post_id, tag_id)
     );
+    CREATE TABLE IF NOT EXISTS post_emoticon_rules (
+      post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      emoticon_id TEXT NOT NULL REFERENCES emoticons(id) ON DELETE CASCADE,
+      UNIQUE(post_id, emoticon_id)
+    );
   `);
   
   try {
     await client.exec(`ALTER TABLE posts ADD COLUMN author_id TEXT REFERENCES users(id) ON DELETE SET NULL;`);
+  } catch(e) {}
+  try {
+    await client.exec(`ALTER TABLE posts ADD COLUMN reaction_mode TEXT DEFAULT 'all' NOT NULL;`);
   } catch(e) {}
   try {
     await client.exec(`ALTER TABLE reactions ADD COLUMN ip TEXT;`); // Will fail if reactions is dropped and recreated, but that's ok. 

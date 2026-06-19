@@ -26,6 +26,24 @@
             style="margin-bottom: 20px;"
           />
           <br>
+          <label class="kokoa-label">Reaction Mode</label>
+          <select v-model="form.reactionMode" class="kokoa-input" style="margin-bottom: 10px;">
+            <option value="all">All Allowed</option>
+            <option value="none">All Disabled</option>
+            <option value="whitelist">Whitelist</option>
+            <option value="blacklist">Blacklist</option>
+          </select>
+          <br>
+          <template v-if="form.reactionMode === 'whitelist' || form.reactionMode === 'blacklist'">
+            <label class="kokoa-label">Selected Emoticons for {{ form.reactionMode }}</label>
+            <KokoaTagSelect
+              v-model="form.emoticonRules"
+              :options="emoticonOptions"
+              placeholder="Select emoticons..."
+              style="margin-bottom: 20px;"
+            />
+          </template>
+          <br>
           <div style="display: flex; gap: 10px;">
             <button type="submit" class="kokoa-btn kokoa-btn--accent">Save</button>
             <button type="button" @click="isCreating = false" class="kokoa-btn">Cancel</button>
@@ -115,11 +133,20 @@ const columns = [
 ];
 
 const isCreating = ref(false);
-const form = ref({ title: '', slug: '', content: '', tags: [] });
+const form = ref({ title: '', slug: '', content: '', tags: [], reactionMode: 'all', emoticonRules: [] });
 
 const { data: tags } = await useFetch('/api/tags');
 const tagOptions = computed(() => {
   return (tags.value || []).map(t => ({ id: t.id, label: t.name }));
+});
+
+const { data: emoticonsList } = await useFetch('/api/emoticons?limit=-1');
+const emoticonOptions = computed(() => {
+  return (emoticonsList.value || []).map(e => ({
+    id: e.id,
+    label: e.name,
+    image: e.imageUrl.length >= 5 ? e.imageUrl : undefined
+  }));
 });
 
 watch(() => form.value.title, (newTitle) => {
@@ -135,7 +162,7 @@ const createPost = async () => {
       body: form.value
     });
     isCreating.value = false;
-    form.value = { title: '', slug: '', content: '', tags: [] };
+    form.value = { title: '', slug: '', content: '', tags: [], reactionMode: 'all', emoticonRules: [] };
     refresh();
   } catch (err) {
     await showAlert(err.message, 'Error');

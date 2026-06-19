@@ -1,5 +1,5 @@
 import { db } from '../../../utils/db';
-import { posts, reactions } from '../../../database/schema';
+import { posts, reactions, postEmoticonRules } from '../../../database/schema';
 import { eq, and } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
@@ -12,9 +12,26 @@ export default defineEventHandler(async (event) => {
   
   if (!emoticonId) throw createError({ statusCode: 400, statusMessage: 'Missing emoticonId' });
 
-  const postRes = await db.select({ id: posts.id }).from(posts).where(eq(posts.slug, slug)).limit(1);
+  const postRes = await db.select({ id: posts.id, reactionMode: posts.reactionMode }).from(posts).where(eq(posts.slug, slug)).limit(1);
   if (!postRes.length) throw createError({ statusCode: 404, statusMessage: 'Post not found' });
   const postId = postRes[0].id;
+  const reactionMode = postRes[0].reactionMode;
+
+  if (reactionMode === 'none') {
+    throw createError({ statusCode: 403, statusMessage: 'Reactions are disabled for this post' });
+  }
+
+  if (reactionMode === 'whitelist' || reactionMode === 'blacklist') {
+    const rules = await db.select().from(postEmoticonRules).where(eq(postEmoticonRules.postId, postId));
+    const isEmoticonInRules = rules.some(r => r.emoticonId === emoticonId);
+
+    if (reactionMode === 'whitelist' && !isEmoticonInRules) {
+      throw createError({ statusCode: 403, statusMessage: 'This emoticon is not whitelisted for this post' });
+    }
+    if (reactionMode === 'blacklist' && isEmoticonInRules) {
+      throw createError({ statusCode: 403, statusMessage: 'This emoticon is blacklisted for this post' });
+    }
+  }
 
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
 

@@ -14,6 +14,7 @@ export const posts = pgTable('posts', {
   content: text('content').notNull(),
   viewsCount: integer('views_count').default(0).notNull(),
   authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
+  reactionMode: text('reaction_mode').default('all').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -51,5 +52,14 @@ export const postTags = pgTable('post_tags', {
 }, (table) => {
   return {
     pk: unique().on(table.postId, table.tagId),
+  }
+});
+
+export const postEmoticonRules = pgTable('post_emoticon_rules', {
+  postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  emoticonId: text('emoticon_id').notNull().references(() => emoticons.id, { onDelete: 'cascade' }),
+}, (table) => {
+  return {
+    pk: unique().on(table.postId, table.emoticonId),
   }
 });

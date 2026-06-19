@@ -1273,10 +1273,6 @@
   overflow: hidden;
   transition: box-shadow 0.15s ease;
 
-  &:hover {
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--board-header) 10%, transparent);
-  }
-
   &--elevated {
     box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 12px color-mix(in srgb, var(--board-header) 6%, transparent);
 

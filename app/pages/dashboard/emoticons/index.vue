@@ -117,6 +117,15 @@ const createEmoticon = async () => {
 };
 
 const deleteEmoticon = async (id) => {
-  await showAlert('Delete not implemented yet.', 'Info');
+  const confirmed = await showConfirm('Are you sure you want to delete this emoticon?');
+  if (!confirmed) return;
+  
+  try {
+    await $fetch(`/api/emoticons/${id}`, { method: 'DELETE' });
+    await showAlert('Emoticon deleted successfully!', 'Success');
+    refresh();
+  } catch (err) {
+    await showAlert(err.message, 'Error');
+  }
 };
 </script>
