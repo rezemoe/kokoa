@@ -2,6 +2,8 @@
   "name": "kokoa",
   "type": "module",
   "private": true,
+  "packageManager": "pnpm@10.31.0",
+
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
