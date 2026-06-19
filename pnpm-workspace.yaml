@@ -1,6 +1,10 @@
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
-  - "@parcel/watcher"
-  - unrs-resolver
-  - vue-demi
+packages:
+  - .
+
+pnpm:
+  onlyBuiltDependencies:
+    - esbuild
+    - sharp
+    - "@parcel/watcher"
+    - unrs-resolver
+    - vue-demi
